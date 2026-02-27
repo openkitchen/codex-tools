@@ -1,0 +1,531 @@
+:root {
+  --ink: #f6efe3;
+  --subtle: #aeb5c8;
+  --bg-0: #070d17;
+  --bg-1: #0f1a2d;
+  --bg-2: #142742;
+  --line: rgba(222, 232, 255, 0.18);
+  --brand-hot: #ff8f38;
+  --brand-cool: #2fd2c8;
+  --card: rgba(10, 19, 35, 0.68);
+  --ok: #38d49f;
+  --danger: #f26a77;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.shell {
+  min-height: 100vh;
+  padding: 28px;
+  color: var(--ink);
+  background:
+    radial-gradient(150% 120% at 8% 0%, rgba(255, 145, 56, 0.24) 0%, transparent 44%),
+    radial-gradient(120% 95% at 92% 8%, rgba(47, 210, 200, 0.18) 0%, transparent 41%),
+    linear-gradient(150deg, var(--bg-0) 0%, var(--bg-1) 40%, var(--bg-2) 100%);
+  position: relative;
+}
+
+.ambient {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.18;
+  background-image: repeating-linear-gradient(
+    -38deg,
+    rgba(248, 255, 255, 0.1) 0,
+    rgba(248, 255, 255, 0.1) 1px,
+    transparent 1px,
+    transparent 11px
+  );
+}
+
+.panel {
+  position: relative;
+  z-index: 1;
+  width: min(1220px, 100%);
+  margin: 0 auto;
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  padding: 26px;
+  background: rgba(5, 10, 20, 0.66);
+  backdrop-filter: blur(8px);
+  box-shadow:
+    0 16px 60px rgba(0, 0, 0, 0.42),
+    inset 0 1px rgba(255, 255, 255, 0.06);
+}
+
+.topbar {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 24px;
+  align-items: start;
+}
+
+.kicker {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font: 700 0.68rem/1.2 "IBM Plex Sans", sans-serif;
+  color: var(--brand-cool);
+}
+
+.topbar h1 {
+  margin: 6px 0 0;
+  font: 400 clamp(2rem, 3.2vw, 3.2rem) / 1 "Bebas Neue", sans-serif;
+  letter-spacing: 0.03em;
+}
+
+.subtitle {
+  margin: 10px 0 0;
+  max-width: 66ch;
+  color: var(--subtle);
+  font: 400 0.98rem/1.5 "IBM Plex Sans", sans-serif;
+}
+
+.topActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+button {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 10px 16px;
+  color: var(--ink);
+  cursor: pointer;
+  transition: transform 140ms ease, filter 140ms ease, background 140ms ease;
+  font: 600 0.88rem/1 "IBM Plex Sans", sans-serif;
+}
+
+button:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.06);
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.64;
+  transform: none;
+}
+
+button.primary {
+  background: linear-gradient(120deg, rgba(255, 143, 56, 0.3), rgba(255, 143, 56, 0.15));
+  border-color: rgba(255, 196, 138, 0.5);
+}
+
+button.ghost {
+  background: rgba(47, 210, 200, 0.08);
+  border-color: rgba(117, 231, 222, 0.45);
+}
+
+button.danger {
+  background: rgba(242, 106, 119, 0.12);
+  border-color: rgba(242, 106, 119, 0.45);
+}
+
+.metaStrip {
+  margin-top: 20px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.metaStrip > div {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 12px;
+  background: rgba(16, 27, 48, 0.45);
+}
+
+.metaStrip span {
+  display: block;
+  color: var(--subtle);
+  font: 500 0.77rem/1 "IBM Plex Sans", sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.metaStrip strong {
+  margin-top: 7px;
+  display: block;
+  word-break: break-all;
+  font: 600 0.94rem/1.3 "IBM Plex Mono", monospace;
+}
+
+.importBox {
+  margin-top: 16px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: rgba(17, 34, 62, 0.54);
+  padding: 16px;
+}
+
+.importBox h2 {
+  margin: 0;
+  font: 400 1.55rem/1 "Bebas Neue", sans-serif;
+  letter-spacing: 0.04em;
+}
+
+.importBox p {
+  margin: 8px 0 0;
+  color: var(--subtle);
+  font: 400 0.9rem/1.45 "IBM Plex Sans", sans-serif;
+}
+
+.importRow {
+  margin-top: 12px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.hint {
+  margin: 8px 0 0;
+  color: #9fd0ff;
+  font: 500 0.78rem/1.3 "IBM Plex Sans", sans-serif;
+}
+
+.notice {
+  margin-top: 12px;
+  border-radius: 12px;
+  padding: 10px 13px;
+  font: 500 0.86rem/1.35 "IBM Plex Sans", sans-serif;
+  border: 1px solid transparent;
+}
+
+.notice.ok {
+  background: rgba(56, 212, 159, 0.12);
+  border-color: rgba(56, 212, 159, 0.42);
+}
+
+.notice.error {
+  background: rgba(242, 106, 119, 0.12);
+  border-color: rgba(242, 106, 119, 0.45);
+}
+
+.notice.info {
+  background: rgba(47, 210, 200, 0.12);
+  border-color: rgba(47, 210, 200, 0.42);
+}
+
+.updateBanner {
+  margin-top: 12px;
+  border: 1px solid rgba(126, 204, 255, 0.42);
+  border-radius: 14px;
+  padding: 12px;
+  background: linear-gradient(120deg, rgba(34, 72, 124, 0.38), rgba(18, 34, 62, 0.52));
+}
+
+.updateText {
+  display: flex;
+  gap: 12px;
+  align-items: baseline;
+  flex-wrap: wrap;
+  font: 500 0.83rem/1.3 "IBM Plex Sans", sans-serif;
+}
+
+.updateText strong {
+  font: 700 0.92rem/1.2 "IBM Plex Sans", sans-serif;
+  color: #cdeaff;
+}
+
+.updateText span {
+  color: #a9c6de;
+  font: 500 0.78rem/1.2 "IBM Plex Sans", sans-serif;
+}
+
+.updateActions {
+  margin-top: 10px;
+}
+
+.updateBody {
+  margin: 10px 0 0;
+  color: #d8e8f7;
+  font: 400 0.78rem/1.4 "IBM Plex Sans", sans-serif;
+  white-space: pre-wrap;
+}
+
+.updateProgress {
+  margin: 8px 0 0;
+  color: #9fd0ff;
+  font: 600 0.76rem/1.2 "IBM Plex Mono", monospace;
+}
+
+.cards {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 14px;
+}
+
+.emptyState {
+  border: 1px dashed rgba(239, 244, 255, 0.34);
+  border-radius: 16px;
+  padding: 30px;
+  text-align: center;
+  color: var(--subtle);
+}
+
+.emptyState h3 {
+  margin: 0;
+  color: var(--ink);
+  font: 400 1.4rem/1 "Bebas Neue", sans-serif;
+}
+
+.emptyState p {
+  margin: 9px 0 0;
+  font: 400 0.88rem/1.4 "IBM Plex Sans", sans-serif;
+}
+
+.accountCard {
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 18px 14px 14px;
+  background: var(--card);
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.05);
+  animation: riseIn 320ms ease both;
+  position: relative;
+  overflow: hidden;
+}
+
+.accountCard::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.accountCard.tone-team {
+  border-color: rgba(113, 230, 229, 0.56);
+}
+
+.accountCard.tone-team::before {
+  background: linear-gradient(90deg, rgba(71, 218, 204, 0.92), rgba(130, 245, 242, 0.8));
+}
+
+.accountCard.tone-pro {
+  border-color: rgba(255, 162, 104, 0.58);
+}
+
+.accountCard.tone-pro::before {
+  background: linear-gradient(90deg, rgba(255, 130, 54, 0.95), rgba(255, 190, 138, 0.84));
+}
+
+.accountCard.tone-plus {
+  border-color: rgba(168, 132, 255, 0.56);
+}
+
+.accountCard.tone-plus::before {
+  background: linear-gradient(90deg, rgba(154, 132, 255, 0.92), rgba(212, 155, 255, 0.82));
+}
+
+.accountCard.tone-enterprise {
+  border-color: rgba(255, 220, 131, 0.62);
+}
+
+.accountCard.tone-enterprise::before {
+  background: linear-gradient(90deg, rgba(255, 219, 128, 0.94), rgba(255, 240, 190, 0.84));
+}
+
+.accountCard.tone-business {
+  border-color: rgba(136, 188, 255, 0.58);
+}
+
+.accountCard.tone-business::before {
+  background: linear-gradient(90deg, rgba(122, 186, 255, 0.93), rgba(171, 215, 255, 0.8));
+}
+
+.accountCard.tone-free {
+  border-color: rgba(168, 173, 193, 0.52);
+}
+
+.accountCard.tone-free::before {
+  background: linear-gradient(90deg, rgba(178, 183, 202, 0.85), rgba(208, 213, 227, 0.72));
+}
+
+.accountCard.tone-unknown {
+  border-color: rgba(178, 183, 202, 0.52);
+}
+
+.stamps {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-start;
+}
+
+.stamp {
+  border-radius: 999px;
+  padding: 4px 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font: 700 0.63rem/1 "IBM Plex Sans", sans-serif;
+  transform: rotate(-8deg);
+  border: 1px solid transparent;
+  backdrop-filter: blur(2px);
+}
+
+.stampPlan {
+  color: #ffe2cb;
+  border-color: rgba(255, 175, 112, 0.62);
+  background: rgba(255, 140, 52, 0.2);
+}
+
+.stampCurrent {
+  color: #c0fff8;
+  border-color: rgba(144, 245, 235, 0.6);
+  background: rgba(60, 207, 189, 0.18);
+}
+
+.cardHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 10px;
+  padding-top: 52px;
+}
+
+.cardHead h3 {
+  margin: 0;
+  font: 600 1.02rem/1.2 "IBM Plex Sans", sans-serif;
+}
+
+.cardHead h3.nameCurrent {
+  color: #ffcf9f;
+  text-shadow: 0 0 24px rgba(255, 164, 95, 0.28);
+}
+
+.cardHead p {
+  margin: 4px 0 0;
+  color: var(--subtle);
+  font: 400 0.78rem/1.3 "IBM Plex Mono", monospace;
+  word-break: break-all;
+}
+
+.usageRow {
+  margin-top: 11px;
+}
+
+.usageTitle {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font: 500 0.84rem/1 "IBM Plex Sans", sans-serif;
+}
+
+.usageStats {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.usageStats strong {
+  font: 700 0.8rem/1 "IBM Plex Mono", monospace;
+}
+
+.usageStats em {
+  color: #a9b6cd;
+  font-style: normal;
+  font: 500 0.75rem/1 "IBM Plex Sans", sans-serif;
+}
+
+.barTrack {
+  margin-top: 7px;
+  height: 9px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(214, 226, 255, 0.14);
+}
+
+.barFill {
+  height: 100%;
+  border-radius: inherit;
+  transition: width 360ms ease;
+}
+
+.barFill.hot {
+  background: linear-gradient(90deg, rgba(255, 143, 56, 0.88), rgba(255, 193, 138, 0.88));
+}
+
+.barFill.cool {
+  background: linear-gradient(90deg, rgba(47, 210, 200, 0.9), rgba(135, 245, 236, 0.87));
+}
+
+.usageRow small {
+  margin-top: 6px;
+  display: block;
+  color: var(--subtle);
+  font: 400 0.74rem/1.3 "IBM Plex Sans", sans-serif;
+}
+
+.credits {
+  margin: 9px 0 0;
+  color: #a7d9ff;
+  font: 500 0.76rem/1.3 "IBM Plex Mono", monospace;
+}
+
+.errorText {
+  margin: 10px 0 0;
+  color: #ff98a2;
+  font: 400 0.75rem/1.35 "IBM Plex Sans", sans-serif;
+  word-break: break-word;
+}
+
+.cardActions {
+  margin-top: 12px;
+  display: flex;
+  gap: 8px;
+}
+
+.cardActions button {
+  flex: 1;
+}
+
+@keyframes riseIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 900px) {
+  .shell {
+    padding: 14px;
+  }
+
+  .panel {
+    padding: 16px;
+    border-radius: 16px;
+  }
+
+  .topbar {
+    grid-template-columns: 1fr;
+  }
+
+  .topActions {
+    justify-content: flex-start;
+  }
+
+  .metaStrip {
+    grid-template-columns: 1fr;
+  }
+
+  .importRow {
+    flex-direction: column;
+  }
+}
