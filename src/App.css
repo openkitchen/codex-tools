@@ -21,6 +21,13 @@
   --button-ghost-border: rgba(15, 127, 119, 0.35);
   --button-danger-bg: rgba(242, 106, 119, 0.11);
   --button-danger-border: rgba(181, 66, 78, 0.35);
+  --button-flow: linear-gradient(
+    110deg,
+    rgba(255, 151, 76, 0) 10%,
+    rgba(255, 170, 120, 0.45) 35%,
+    rgba(132, 235, 220, 0.56) 55%,
+    rgba(255, 151, 76, 0) 85%
+  );
   --hint: #236fb1;
   --update-border: rgba(93, 141, 196, 0.42);
   --update-bg: linear-gradient(120deg, rgba(224, 237, 255, 0.82), rgba(242, 248, 255, 0.92));
@@ -73,6 +80,13 @@
   --button-ghost-border: rgba(117, 231, 222, 0.45);
   --button-danger-bg: rgba(242, 106, 119, 0.12);
   --button-danger-border: rgba(242, 106, 119, 0.45);
+  --button-flow: linear-gradient(
+    110deg,
+    rgba(255, 164, 95, 0) 10%,
+    rgba(255, 179, 126, 0.58) 34%,
+    rgba(125, 240, 230, 0.68) 58%,
+    rgba(255, 164, 95, 0) 86%
+  );
   --hint: #9fd0ff;
   --update-border: rgba(126, 204, 255, 0.42);
   --update-bg: linear-gradient(120deg, rgba(34, 72, 124, 0.38), rgba(18, 34, 62, 0.52));
@@ -189,16 +203,183 @@
   flex-wrap: wrap;
   gap: 10px;
   justify-content: flex-end;
+  align-items: center;
+}
+
+.iconButton {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.iconGlyph {
+  width: 20px;
+  height: 20px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.iconGlyph.isSpinning {
+  animation: iconSpin 900ms linear infinite;
+}
+
+.settingsOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(8, 18, 34, 0.35);
+  backdrop-filter: blur(4px);
+  animation: fadeIn 160ms ease both;
+}
+
+.settingsDialog {
+  width: min(760px, 100%);
+  max-height: calc(100vh - 40px);
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--import-bg);
+  padding: 16px;
+  box-shadow: var(--panel-shadow);
+  animation: riseIn 220ms ease both;
+}
+
+.settingsHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.settingsHeader h2 {
+  margin: 0;
+  font: 400 1.45rem/1 "Bebas Neue", sans-serif;
+  letter-spacing: 0.03em;
+}
+
+.settingsHeader p {
+  margin: 8px 0 0;
+  color: var(--subtle);
+  font: 400 0.84rem/1.4 "IBM Plex Sans", sans-serif;
+}
+
+.settingRow {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 14px;
+  border-top: 1px dashed var(--line);
+  padding-top: 14px;
+}
+
+.settingMeta strong {
+  display: block;
+  font: 600 0.96rem/1.2 "IBM Plex Sans", sans-serif;
+}
+
+.settingMeta p {
+  margin: 6px 0 0;
+  color: var(--subtle);
+  font: 400 0.82rem/1.4 "IBM Plex Sans", sans-serif;
+}
+
+.modeGroup {
+  display: inline-flex;
+  gap: 8px;
+}
+
+.themeSwitch {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--button-ghost-border);
+  border-radius: 999px;
+  padding: 6px 10px 6px 8px;
+  background: var(--button-ghost-bg);
+  cursor: pointer;
+  user-select: none;
+}
+
+.themeSwitch input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.themeSwitchTrack {
+  width: 40px;
+  height: 22px;
+  border-radius: 999px;
+  background: rgba(96, 126, 164, 0.34);
+  border: 1px solid var(--line);
+  display: inline-flex;
+  align-items: center;
+  padding: 2px;
+  transition: background 140ms ease;
+}
+
+.themeSwitchThumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--ink);
+  transform: translateX(0);
+  transition: transform 140ms ease, background 140ms ease;
+}
+
+.themeSwitch input:checked + .themeSwitchTrack {
+  background: rgba(47, 210, 200, 0.42);
+}
+
+.themeSwitch input:checked + .themeSwitchTrack .themeSwitchThumb {
+  transform: translateX(18px);
+}
+
+.themeSwitchText {
+  min-width: 2.2em;
+  font: 600 0.82rem/1 "IBM Plex Sans", sans-serif;
+  color: var(--ink);
+  text-align: center;
 }
 
 button {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
   border: 1px solid var(--line);
   border-radius: 999px;
   padding: 10px 16px;
   color: var(--ink);
   cursor: pointer;
-  transition: transform 140ms ease, filter 140ms ease, background 140ms ease;
+  transition:
+    transform 140ms ease,
+    filter 140ms ease,
+    background 140ms ease,
+    border-color 160ms ease;
   font: 600 0.88rem/1 "IBM Plex Sans", sans-serif;
+}
+
+button::before {
+  content: "";
+  position: absolute;
+  inset: -180% -70%;
+  background: var(--button-flow);
+  transform: translateX(-100%) rotate(14deg);
+  opacity: 0;
+  transition: transform 520ms ease, opacity 260ms ease;
+  pointer-events: none;
 }
 
 button:hover {
@@ -206,10 +387,20 @@ button:hover {
   filter: brightness(1.06);
 }
 
+button:hover::before {
+  opacity: 1;
+  transform: translateX(105%) rotate(14deg);
+}
+
 button:disabled {
   cursor: not-allowed;
   opacity: 0.64;
   transform: none;
+}
+
+button:disabled::before {
+  opacity: 0;
+  transform: translateX(-100%) rotate(14deg);
 }
 
 button.primary {
@@ -603,6 +794,26 @@ button.danger {
   }
 }
 
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes iconSpin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 @media (max-width: 900px) {
   .shell {
     padding: 14px;
@@ -621,8 +832,27 @@ button.danger {
     justify-content: flex-start;
   }
 
+  .settingsOverlay {
+    padding: 12px;
+  }
+
+  .settingsDialog {
+    max-height: calc(100vh - 24px);
+    border-radius: 14px;
+    padding: 14px;
+  }
+
   .metaStrip {
     grid-template-columns: 1fr;
+  }
+
+  .settingsHeader {
+    flex-direction: column;
+  }
+
+  .settingRow {
+    grid-template-columns: 1fr;
+    justify-items: start;
   }
 
   .importRow {

@@ -7,12 +7,17 @@
 
 仓库地址：<https://github.com/170-carry/codex-tools>
 
+## 应用截图
+
+![Codex Tools Screenshot](public/ScreenShot.png)
+
 ## 解决codex-tools app 已损坏的方案
 
 > https://zhuanlan.zhihu.com/p/135948430
 
 > 省流:
 > sudo spctl  --master-disable
+
 > sudo xattr -r -d com.apple.quarantine /Applications/Codex\ Tools.app
 
 ## 快速启动（本地开发）
@@ -85,8 +90,8 @@ git push origin v0.1.3
 ```
 
 查看：
-- Actions: <https://github.com/170-carry/codex-tools/actions>
-- Releases: <https://github.com/170-carry/codex-tools/releases>
+- 代码仓库: <https://github.com/170-carry/codex-tools>
+- 版本发布: <https://github.com/170-carry/codex-tools/releases>
 
 ## 目录说明
 
@@ -94,3 +99,6 @@ git push origin v0.1.3
 - Tauri / Rust：`src-tauri/`
 - 发布流程：`.github/workflows/release.yml`
 
+## License
+
+MIT，详见 [LICENSE](LICENSE)。
