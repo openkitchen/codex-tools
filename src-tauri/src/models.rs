@@ -119,6 +119,7 @@ pub(crate) struct ExtractedAuth {
 #[serde(rename_all = "camelCase")]
 pub(crate) enum TrayUsageDisplayMode {
     Used,
+    Hidden,
     #[default]
     Remaining,
 }

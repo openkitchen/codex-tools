@@ -278,18 +278,14 @@
   justify-content: center;
 }
 
-.languageButton {
-  width: auto;
-  min-width: 62px;
-  padding: 0 10px;
-  gap: 6px;
-  border-radius: 14px;
+.editorPicker.languagePicker {
+  width: 132px;
+  min-width: 132px;
 }
 
-.languageButtonCode {
-  font: 700 0.72rem/1 "IBM Plex Sans", sans-serif;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+.editorPicker.languagePicker .editorPickerTrigger {
+  min-height: 44px;
+  padding-right: 34px;
 }
 
 .iconGlyph {
@@ -433,8 +429,8 @@
 }
 
 .editorPicker {
-  width: min(360px, 100%);
-  min-width: 260px;
+  width: min(300px, 100%);
+  min-width: 220px;
   position: relative;
 }
 

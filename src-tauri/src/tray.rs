@@ -1,6 +1,7 @@
 use std::time::Duration;
 
 use tauri::AppHandle;
+use tauri::Emitter;
 use tauri::Manager;
 
 use crate::account_service::refresh_all_usage_internal;
@@ -15,6 +16,10 @@ const REFRESH_INTERVAL_SECONDS: u64 = 30;
 
 #[cfg(target_os = "macos")]
 const TRAY_ID: &str = "codex_tools_status_bar";
+#[cfg(target_os = "macos")]
+pub(crate) const APP_MENU_CHECK_UPDATE_ID: &str = "app_check_update";
+#[cfg(target_os = "macos")]
+pub(crate) const APP_MENU_OPEN_SETTINGS_ID: &str = "app_open_settings";
 #[cfg(target_os = "macos")]
 const TRAY_MENU_REFRESH_ID: &str = "tray_refresh_usage";
 #[cfg(target_os = "macos")]
@@ -40,6 +45,7 @@ fn mode_percent(mode: TrayUsageDisplayMode, window: Option<&UsageWindow>) -> Opt
     match mode {
         TrayUsageDisplayMode::Used => window.map(|item| item.used_percent),
         TrayUsageDisplayMode::Remaining => remaining_percent(window),
+        TrayUsageDisplayMode::Hidden => None,
     }
 }
 
@@ -47,6 +53,7 @@ fn usage_mode_label(mode: TrayUsageDisplayMode) -> &'static str {
     match mode {
         TrayUsageDisplayMode::Used => "已用",
         TrayUsageDisplayMode::Remaining => "剩余",
+        TrayUsageDisplayMode::Hidden => "不展示",
     }
 }
 
@@ -58,6 +65,11 @@ fn read_tray_usage_mode(app: &AppHandle) -> TrayUsageDisplayMode {
 
 #[cfg(target_os = "macos")]
 fn tray_account_usage_line(account: &AccountSummary, mode: TrayUsageDisplayMode) -> String {
+    let current_prefix = if account.is_current { "[当前] " } else { "" };
+    if mode == TrayUsageDisplayMode::Hidden {
+        return format!("{current_prefix}{}", account.label);
+    }
+
     let five_hour = format_percent(mode_percent(
         mode,
         account
@@ -73,7 +85,6 @@ fn tray_account_usage_line(account: &AccountSummary, mode: TrayUsageDisplayMode)
             .and_then(|usage| usage.one_week.as_ref()),
     ));
 
-    let current_prefix = if account.is_current { "[当前] " } else { "" };
     let mode_label = usage_mode_label(mode);
     format!(
         "{current_prefix}{} | 5h{mode_label} {five_hour} | 1week{mode_label} {one_week}",
@@ -83,6 +94,10 @@ fn tray_account_usage_line(account: &AccountSummary, mode: TrayUsageDisplayMode)
 
 #[cfg(target_os = "macos")]
 fn build_macos_tray_title(accounts: &[AccountSummary], mode: TrayUsageDisplayMode) -> String {
+    if mode == TrayUsageDisplayMode::Hidden {
+        return String::new();
+    }
+
     if let Some(current) = accounts.iter().find(|account| account.is_current) {
         let five_hour = format_percent(mode_percent(
             mode,
@@ -326,6 +341,20 @@ pub(crate) fn handle_status_bar_menu_event(app: &AppHandle, event: tauri::menu::
     #[cfg(target_os = "macos")]
     {
         let id = event.id().as_ref();
+        if id == APP_MENU_OPEN_SETTINGS_ID {
+            if let Err(err) = app.emit("app-menu-open-settings", ()) {
+                log::warn!("发送菜单打开设置事件失败: {err}");
+            }
+            return;
+        }
+
+        if id == APP_MENU_CHECK_UPDATE_ID {
+            if let Err(err) = app.emit("app-menu-check-update", ()) {
+                log::warn!("发送菜单检查更新事件失败: {err}");
+            }
+            return;
+        }
+
         if id == TRAY_MENU_QUIT_ID {
             app.exit(0);
             return;

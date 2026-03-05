@@ -44,6 +44,15 @@ function detectBrowserLocale(): AppLocale {
     if (value.startsWith("en")) {
       return "en-US";
     }
+    if (value.startsWith("ja")) {
+      return "ja-JP";
+    }
+    if (value.startsWith("ko")) {
+      return "ko-KR";
+    }
+    if (value.startsWith("ru")) {
+      return "ru-RU";
+    }
   }
 
   return DEFAULT_LOCALE;

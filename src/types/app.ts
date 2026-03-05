@@ -70,7 +70,7 @@ export type AddFlow = {
 
 export type ThemeMode = "light" | "dark";
 
-export type TrayUsageDisplayMode = "remaining" | "used";
+export type TrayUsageDisplayMode = "remaining" | "used" | "hidden";
 
 export type EditorAppId =
   | "vscode"

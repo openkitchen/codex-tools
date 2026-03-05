@@ -1,21 +1,31 @@
 import { createPortal } from "react-dom";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useI18n } from "../i18n/I18nProvider";
-import type { EditorAppId, InstalledEditorApp } from "../types/app";
 
-type EditorMultiSelectProps = {
-  options: InstalledEditorApp[];
-  value: EditorAppId | null;
-  disabled?: boolean;
-  onChange: (next: EditorAppId) => void;
+export type MultiSelectOption<T extends string> = {
+  id: T;
+  label: string;
 };
 
-export function EditorMultiSelect({
+type EditorMultiSelectProps<T extends string> = {
+  options: MultiSelectOption<T>[];
+  value: T | null;
+  disabled?: boolean;
+  ariaLabel?: string;
+  placeholder?: string;
+  className?: string;
+  onChange: (next: T) => void;
+};
+
+export function EditorMultiSelect<T extends string>({
   options,
   value,
   disabled = false,
+  ariaLabel,
+  placeholder,
+  className,
   onChange,
-}: EditorMultiSelectProps) {
+}: EditorMultiSelectProps<T>) {
   const { copy } = useI18n();
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement | null>(null);
@@ -79,15 +89,20 @@ export function EditorMultiSelect({
     };
   }, [open, updateMenuPosition]);
 
-  const selectOption = (id: EditorAppId) => {
+  const selectOption = (id: T) => {
     onChange(id);
     setOpen(false);
   };
 
+  const effectiveAriaLabel = ariaLabel ?? copy.editorPicker.ariaLabel;
+  const effectivePlaceholder = placeholder ?? copy.editorPicker.placeholder;
+
   return (
     <div
       ref={rootRef}
-      className={`editorPicker${open ? " isOpen" : ""}${disabled ? " isDisabled" : ""}`}
+      className={`editorPicker${open ? " isOpen" : ""}${disabled ? " isDisabled" : ""}${
+        className ? ` ${className}` : ""
+      }`}
     >
       <button
         ref={triggerRef}
@@ -103,11 +118,11 @@ export function EditorMultiSelect({
         }}
         aria-haspopup="listbox"
         aria-expanded={open}
-        aria-label={copy.editorPicker.ariaLabel}
+        aria-label={effectiveAriaLabel}
       >
         <div className="editorPickerValue">
           <span className={selected ? "editorPickerLabel" : "editorPickerPlaceholder"}>
-            {selected?.label ?? copy.editorPicker.placeholder}
+            {selected?.label ?? effectivePlaceholder}
           </span>
         </div>
         <svg className="editorChevron" viewBox="0 0 24 24" aria-hidden="true" focusable="false">

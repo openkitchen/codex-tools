@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 import "./App.css";
 import { AddAccountSection } from "./components/AddAccountSection";
 import { AddAccountDialog } from "./components/AddAccountDialog";
@@ -22,7 +23,6 @@ function App() {
     addFlow,
     switchingId,
     pendingDeleteId,
-    checkingUpdate,
     installingUpdate,
     updateProgress,
     pendingUpdate,
@@ -33,7 +33,6 @@ function App() {
     savingSettings,
     currentCount,
     refreshUsage,
-    checkForAppUpdate,
     installPendingUpdate,
     openManualDownloadPage,
     closeUpdateDialog,
@@ -46,15 +45,34 @@ function App() {
     smartSwitching,
   } = useCodexController();
 
+  useEffect(() => {
+    let disposed = false;
+    let unlisten: UnlistenFn | null = null;
+    void listen("app-menu-open-settings", () => {
+      setSettingsOpen(true);
+    })
+      .then((fn) => {
+        if (disposed) {
+          void fn();
+          return;
+        }
+        unlisten = fn;
+      })
+      .catch(() => {});
+
+    return () => {
+      disposed = true;
+      if (unlisten) {
+        void unlisten();
+      }
+    };
+  }, []);
+
   return (
     <div className="shell">
       <div className="ambient" />
       <main className="panel">
         <AppTopBar
-          onOpenSettings={() => setSettingsOpen(true)}
-          onCheckUpdate={() => void checkForAppUpdate(false)}
-          checkingUpdate={checkingUpdate}
-          installingUpdate={installingUpdate}
           onRefresh={() => void refreshUsage(false)}
           refreshing={refreshing}
         />

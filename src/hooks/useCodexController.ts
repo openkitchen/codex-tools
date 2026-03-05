@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 import { relaunch } from "@tauri-apps/plugin-process";
 import { check } from "@tauri-apps/plugin-updater";
 import { useI18n } from "../i18n/I18nProvider";
@@ -307,6 +308,30 @@ export function useCodexController() {
       clearInterval(editorTimer);
     };
   }, [checkForAppUpdate, loadAccounts, loadInstalledEditorApps, loadSettings, refreshUsage]);
+
+  useEffect(() => {
+    let disposed = false;
+    let unlisten: UnlistenFn | null = null;
+
+    void listen("app-menu-check-update", () => {
+      void checkForAppUpdate(false);
+    })
+      .then((fn) => {
+        if (disposed) {
+          void fn();
+          return;
+        }
+        unlisten = fn;
+      })
+      .catch(() => {});
+
+    return () => {
+      disposed = true;
+      if (unlisten) {
+        void unlisten();
+      }
+    };
+  }, [checkForAppUpdate]);
 
   useEffect(() => {
     if (!addFlow) {

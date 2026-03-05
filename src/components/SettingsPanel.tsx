@@ -173,6 +173,14 @@ export function SettingsPanel({
             >
               {copy.settings.trayUsageDisplay.used}
             </button>
+            <button
+              className={settings.trayUsageDisplayMode === "hidden" ? "primary" : "ghost"}
+              disabled={savingSettings}
+              onClick={() => onUpdateSettings({ trayUsageDisplayMode: "hidden" })}
+              aria-pressed={settings.trayUsageDisplayMode === "hidden"}
+            >
+              {copy.settings.trayUsageDisplay.hidden}
+            </button>
           </div>
         </div>
 
