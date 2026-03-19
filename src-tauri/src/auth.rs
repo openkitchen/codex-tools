@@ -45,6 +45,7 @@ pub(crate) fn read_current_auth_status() -> Result<CurrentAuthStatus, String> {
         return Ok(CurrentAuthStatus {
             available: false,
             account_id: None,
+            workspace_name: None,
             email: None,
             plan_type: None,
             auth_mode: None,
@@ -79,6 +80,9 @@ pub(crate) fn read_current_auth_status() -> Result<CurrentAuthStatus, String> {
     let extracted = extract_auth(&value).ok();
     let principal_id = extracted.as_ref().map(|auth| auth.principal_id.clone());
     let account_id = extracted.as_ref().map(|auth| auth.account_id.clone());
+    let workspace_name = extracted
+        .as_ref()
+        .and_then(|auth| auth.workspace_name.clone());
     let email = extracted.as_ref().and_then(|auth| auth.email.clone());
     let plan_type = extracted.as_ref().and_then(|auth| auth.plan_type.clone());
 
@@ -94,6 +98,7 @@ pub(crate) fn read_current_auth_status() -> Result<CurrentAuthStatus, String> {
     Ok(CurrentAuthStatus {
         available: true,
         account_id,
+        workspace_name,
         email,
         plan_type,
         auth_mode,
@@ -221,6 +226,7 @@ pub(crate) fn extract_auth(auth_json: &Value) -> Result<ExtractedAuth, String> {
         .get("account_id")
         .and_then(Value::as_str)
         .map(ToString::to_string);
+    let mut organizations: Vec<Value> = Vec::new();
     let mut email = None;
     let mut plan_type = None;
     let mut principal_id = None;
@@ -234,6 +240,11 @@ pub(crate) fn extract_auth(auth_json: &Value) -> Result<ExtractedAuth, String> {
         let auth_claim = claims
             .get("https://api.openai.com/auth")
             .and_then(Value::as_object);
+        organizations = auth_claim
+            .and_then(|value| value.get("organizations"))
+            .and_then(Value::as_array)
+            .cloned()
+            .unwrap_or_default();
         if account_id.is_none() {
             account_id = auth_claim
                 .and_then(|value| value.get("chatgpt_account_id"))
@@ -268,14 +279,74 @@ pub(crate) fn extract_auth(auth_json: &Value) -> Result<ExtractedAuth, String> {
     let account_id =
         account_id.ok_or_else(|| "无法从 auth.json 识别 chatgpt_account_id".to_string())?;
     let principal_id = principal_id.unwrap_or_else(|| account_id.clone());
+    let workspace_name = resolve_workspace_name_from_organizations(&organizations, &account_id);
 
     Ok(ExtractedAuth {
         principal_id,
         account_id,
+        workspace_name,
         access_token,
         email,
         plan_type,
     })
+}
+
+fn resolve_workspace_name_from_organizations(
+    organizations: &[Value],
+    account_id: &str,
+) -> Option<String> {
+    #[derive(Clone)]
+    struct OrganizationCandidate {
+        id: Option<String>,
+        title: String,
+        is_default: bool,
+    }
+
+    let candidates: Vec<OrganizationCandidate> = organizations
+        .iter()
+        .filter_map(|item| {
+            let object = item.as_object()?;
+            let title = object
+                .get("title")
+                .and_then(Value::as_str)
+                .map(str::trim)
+                .filter(|value| !value.is_empty())?
+                .to_string();
+
+            Some(OrganizationCandidate {
+                id: object
+                    .get("id")
+                    .and_then(Value::as_str)
+                    .map(ToString::to_string),
+                title,
+                is_default: object
+                    .get("is_default")
+                    .and_then(Value::as_bool)
+                    .unwrap_or(false),
+            })
+        })
+        .collect();
+
+    if let Some(exact) = candidates
+        .iter()
+        .find(|candidate| candidate.id.as_deref() == Some(account_id))
+    {
+        return Some(exact.title.clone());
+    }
+
+    if candidates.len() == 1 {
+        return Some(candidates[0].title.clone());
+    }
+
+    let default_candidates: Vec<&OrganizationCandidate> = candidates
+        .iter()
+        .filter(|candidate| candidate.is_default)
+        .collect();
+    if default_candidates.len() == 1 {
+        return Some(default_candidates[0].title.clone());
+    }
+
+    None
 }
 
 pub(crate) fn current_auth_account_key() -> Option<String> {
@@ -516,5 +587,63 @@ fn extract_client_id_from_claims(claims: &Value) -> Option<String> {
             })
         }),
         _ => None,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::resolve_workspace_name_from_organizations;
+    use serde_json::json;
+    use serde_json::Value;
+
+    fn organizations(items: Value) -> Vec<Value> {
+        items.as_array().cloned().unwrap_or_default()
+    }
+
+    #[test]
+    fn workspace_name_prefers_exact_id_match() {
+        let organizations = organizations(json!([
+            { "id": "org-1", "title": "Default Workspace", "is_default": true },
+            { "id": "acct-2", "title": "Target Workspace", "is_default": false }
+        ]));
+
+        let resolved = resolve_workspace_name_from_organizations(&organizations, "acct-2");
+
+        assert_eq!(resolved.as_deref(), Some("Target Workspace"));
+    }
+
+    #[test]
+    fn workspace_name_uses_single_organization_title() {
+        let organizations = organizations(
+            json!([{ "id": "org-1", "title": "Only Workspace", "is_default": false }]),
+        );
+
+        let resolved = resolve_workspace_name_from_organizations(&organizations, "acct-unknown");
+
+        assert_eq!(resolved.as_deref(), Some("Only Workspace"));
+    }
+
+    #[test]
+    fn workspace_name_uses_unique_default_as_fallback() {
+        let organizations = organizations(json!([
+            { "id": "org-1", "title": "Default Workspace", "is_default": true },
+            { "id": "org-2", "title": "Secondary Workspace", "is_default": false }
+        ]));
+
+        let resolved = resolve_workspace_name_from_organizations(&organizations, "acct-unknown");
+
+        assert_eq!(resolved.as_deref(), Some("Default Workspace"));
+    }
+
+    #[test]
+    fn workspace_name_returns_none_when_ambiguous() {
+        let organizations = organizations(json!([
+            { "id": "org-1", "title": "Workspace A", "is_default": false },
+            { "id": "org-2", "title": "Workspace B", "is_default": false }
+        ]));
+
+        let resolved = resolve_workspace_name_from_organizations(&organizations, "acct-unknown");
+
+        assert_eq!(resolved, None);
     }
 }

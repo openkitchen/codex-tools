@@ -92,6 +92,9 @@ function App() {
     onUpdateRemoteServers,
     smartSwitching,
   } = useCodexController();
+  const currentAccount = accounts.find((account) => account.isCurrent) ?? null;
+  const currentWorkspaceId = currentAccount?.accountId ?? null;
+  const currentWorkspaceLabel = currentAccount?.workspaceName ?? currentWorkspaceId;
 
   useEffect(() => {
     const isMac =
@@ -155,6 +158,8 @@ function App() {
               <div className="accountsHero">
                 <MetaStrip
                   accountCount={accounts.length}
+                  currentWorkspaceLabel={currentWorkspaceLabel}
+                  currentWorkspaceId={currentWorkspaceId}
                   exportingAccounts={exportingAccounts}
                   onExportAccounts={() => void onExportAccounts()}
                 />

@@ -248,6 +248,18 @@ export function AccountCard({
                 </button>
               );
             })}
+            <span
+              className="cardBadge workspaceBadge"
+              title={selectedAccount.accountId}
+              aria-label={`${copy.accountCard.workspaceLabel}: ${
+                selectedAccount.workspaceName ?? selectedAccount.accountId
+              }`}
+            >
+              <span className="workspaceBadgeLabel">{copy.accountCard.workspaceLabel}</span>
+              <span className="workspaceBadgeValue">
+                {selectedAccount.workspaceName ?? selectedAccount.accountId}
+              </span>
+            </span>
           </div>
           {isEditingAlias ? (
             <form className="cardAliasEditor" onSubmit={handleAliasSubmit}>

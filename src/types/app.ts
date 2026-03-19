@@ -26,6 +26,7 @@ export type AccountSummary = {
   email: string | null;
   accountKey: string;
   accountId: string;
+  workspaceName: string | null;
   planType: string | null;
   addedAt: number;
   updatedAt: number;
@@ -49,6 +50,7 @@ export type SwitchAccountResult = {
 export type CurrentAuthStatus = {
   available: boolean;
   accountId: string | null;
+  workspaceName: string | null;
   email: string | null;
   planType: string | null;
   authMode: string | null;

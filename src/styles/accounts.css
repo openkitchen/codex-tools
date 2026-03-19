@@ -267,6 +267,31 @@
   border-color: color-mix(in srgb, var(--stamp-current-border) 52%, var(--stamp-plan-border) 48%);
 }
 
+.workspaceBadge {
+  max-width: 100%;
+  gap: 7px;
+  padding-inline: 10px 12px;
+  color: color-mix(in srgb, var(--ink) 84%, var(--subtle) 16%);
+  border-color: color-mix(in srgb, var(--line) 82%, var(--surface-tint) 18%);
+  background: color-mix(in srgb, var(--card) 88%, var(--surface-tint) 12%);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.workspaceBadgeLabel {
+  flex: 0 0 auto;
+  color: var(--subtle);
+  font: 700 0.58rem/1 var(--font-ui);
+}
+
+.workspaceBadgeValue {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font: 650 0.68rem/1 var(--font-ui);
+}
+
 .planCurrentGlass {
   display: inline-flex;
   align-items: center;

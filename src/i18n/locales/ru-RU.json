@@ -16,7 +16,9 @@
   "metaStrip": {
     "ariaLabel": "Обзор аккаунтов",
     "accountCount": "Аккаунты",
-    "currentActive": "Активен сейчас"
+    "currentActive": "Активен сейчас",
+    "currentWorkspace": "Текущее рабочее пространство",
+    "currentWorkspaceEmpty": "Не обнаружено"
   },
   "addAccount": {
     "smartSwitch": "Умное переключение",
@@ -49,6 +51,7 @@
   "accountCard": {
     "currentStamp": "Текущий",
     "currentBadge": "Текущий аккаунт",
+    "workspaceLabel": "Рабочее пространство",
     "launch": "Переключить и запустить",
     "launching": "Запуск",
     "editAlias": "Изменить псевдоним",

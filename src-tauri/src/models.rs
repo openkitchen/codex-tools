@@ -61,6 +61,7 @@ pub(crate) struct AccountSummary {
     pub(crate) email: Option<String>,
     pub(crate) account_key: String,
     pub(crate) account_id: String,
+    pub(crate) workspace_name: Option<String>,
     pub(crate) plan_type: Option<String>,
     pub(crate) added_at: i64,
     pub(crate) updated_at: i64,
@@ -114,6 +115,7 @@ pub(crate) struct SwitchAccountResult {
 pub(crate) struct CurrentAuthStatus {
     pub(crate) available: bool,
     pub(crate) account_id: Option<String>,
+    pub(crate) workspace_name: Option<String>,
     pub(crate) email: Option<String>,
     pub(crate) plan_type: Option<String>,
     pub(crate) auth_mode: Option<String>,
@@ -126,6 +128,7 @@ pub(crate) struct CurrentAuthStatus {
 pub(crate) struct ExtractedAuth {
     pub(crate) principal_id: String,
     pub(crate) account_id: String,
+    pub(crate) workspace_name: Option<String>,
     pub(crate) access_token: String,
     pub(crate) email: Option<String>,
     pub(crate) plan_type: Option<String>,
@@ -386,6 +389,12 @@ impl StoredAccount {
             })
     }
 
+    pub(crate) fn workspace_name(&self) -> Option<String> {
+        extract_auth(&self.auth_json)
+            .ok()
+            .and_then(|auth| auth.workspace_name)
+    }
+
     pub(crate) fn variant_key(&self) -> String {
         account_variant_key(
             &self.principal_key(),
@@ -414,6 +423,7 @@ impl StoredAccount {
             email: self.email.clone(),
             account_key,
             account_id: self.account_id.clone(),
+            workspace_name: self.workspace_name(),
             plan_type: self.plan_type.clone(),
             added_at: self.added_at,
             updated_at: self.updated_at,

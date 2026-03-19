@@ -638,6 +638,12 @@ button.danger {
   letter-spacing: -0.02em;
 }
 
+.metaPill strong.metaPillMono {
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  line-height: 1.2;
+}
+
 .metaExportButton {
   min-width: 84px;
 }

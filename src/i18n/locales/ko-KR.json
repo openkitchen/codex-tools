@@ -16,7 +16,9 @@
   "metaStrip": {
     "ariaLabel": "계정 개요",
     "accountCount": "계정 수",
-    "currentActive": "현재 활성"
+    "currentActive": "현재 활성",
+    "currentWorkspace": "현재 워크스페이스",
+    "currentWorkspaceEmpty": "감지되지 않음"
   },
   "addAccount": {
     "smartSwitch": "스마트 전환",
@@ -49,6 +51,7 @@
   "accountCard": {
     "currentStamp": "현재",
     "currentBadge": "현재 계정",
+    "workspaceLabel": "워크스페이스",
     "launch": "전환 후 실행",
     "launching": "실행 중",
     "editAlias": "별칭 편집",

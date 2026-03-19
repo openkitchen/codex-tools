@@ -16,7 +16,9 @@
   "metaStrip": {
     "ariaLabel": "アカウント概要",
     "accountCount": "アカウント数",
-    "currentActive": "現在アクティブ"
+    "currentActive": "現在アクティブ",
+    "currentWorkspace": "現在のワークスペース",
+    "currentWorkspaceEmpty": "未検出"
   },
   "addAccount": {
     "smartSwitch": "スマート切替",
@@ -49,6 +51,7 @@
   "accountCard": {
     "currentStamp": "現在",
     "currentBadge": "現在のアカウント",
+    "workspaceLabel": "ワークスペース",
     "launch": "切替して起動",
     "launching": "起動中",
     "editAlias": "別名を編集",
