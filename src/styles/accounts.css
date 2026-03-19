@@ -8,7 +8,6 @@
   align-content: start;
   min-height: 0;
   overflow: auto;
-  padding: 2px 8px 2px 2px;
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
