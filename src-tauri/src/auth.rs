@@ -3,12 +3,12 @@ use base64::engine::general_purpose::URL_SAFE_NO_PAD;
 use base64::Engine;
 use serde_json::Map;
 use serde_json::Value;
+use sha2::Digest;
+use sha2::Sha256;
 use std::fs;
 use std::path::PathBuf;
 use std::time::SystemTime;
 use std::time::UNIX_EPOCH;
-use sha2::Digest;
-use sha2::Sha256;
 
 use crate::models::ExtractedAuth;
 use crate::models::PreparedOauthLogin;
@@ -400,6 +400,27 @@ pub(crate) fn extract_codex_oauth_tokens(auth_json: &Value) -> Result<CodexOAuth
     })
 }
 
+pub(crate) fn auth_tokens_need_refresh(auth_json: &Value) -> bool {
+    let Some(tokens) = auth_token_object(auth_json) else {
+        return false;
+    };
+
+    let now = match SystemTime::now().duration_since(UNIX_EPOCH) {
+        Ok(duration) => duration.as_secs() as i64,
+        Err(_) => return false,
+    };
+    let refresh_deadline = now + 60;
+
+    ["access_token", "id_token"].iter().any(|field| {
+        tokens
+            .get(*field)
+            .and_then(Value::as_str)
+            .and_then(jwt_expiration_unix)
+            .map(|exp| exp <= refresh_deadline)
+            .unwrap_or(false)
+    })
+}
+
 /// 使用 auth.json 内的 refresh_token 刷新 ChatGPT OAuth 令牌。
 ///
 /// 返回更新后的 auth.json（仅内存对象，不会自动写盘）。
@@ -475,6 +496,12 @@ pub(crate) async fn refresh_chatgpt_auth_tokens(auth_json: &Value) -> Result<Val
     if let Some(refresh_token) = refreshed.refresh_token {
         tokens.insert("refresh_token".to_string(), Value::String(refresh_token));
     }
+    let last_refresh = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map_err(|error| format!("读取系统时间失败: {error}"))?
+        .as_secs()
+        .to_string();
+    root.insert("last_refresh".to_string(), Value::String(last_refresh));
 
     Ok(updated)
 }
@@ -594,6 +621,12 @@ fn decode_jwt_payload(token: &str) -> Result<Value, String> {
     serde_json::from_slice(&decoded).map_err(|e| format!("解析 id_token payload 失败: {e}"))
 }
 
+fn jwt_expiration_unix(token: &str) -> Option<i64> {
+    decode_jwt_payload(token)
+        .ok()
+        .and_then(|claims| claims.get("exp").and_then(Value::as_i64))
+}
+
 #[derive(Debug, serde::Deserialize)]
 struct RefreshedTokenPayload {
     access_token: String,
@@ -628,5 +661,52 @@ fn extract_client_id_from_claims(claims: &Value) -> Option<String> {
             })
         }),
         _ => None,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    fn jwt_with_exp(exp: i64) -> String {
+        let payload = URL_SAFE_NO_PAD.encode(format!(r#"{{"exp":{exp}}}"#));
+        format!("header.{payload}.signature")
+    }
+
+    #[test]
+    fn marks_refresh_needed_when_id_token_is_expired() {
+        let now = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .expect("current time should be available")
+            .as_secs() as i64;
+        let auth_json = json!({
+            "auth_mode": "chatgpt",
+            "tokens": {
+                "access_token": jwt_with_exp(now + 3600),
+                "id_token": jwt_with_exp(now - 5),
+                "refresh_token": "refresh-token"
+            }
+        });
+
+        assert!(auth_tokens_need_refresh(&auth_json));
+    }
+
+    #[test]
+    fn skips_refresh_when_both_tokens_are_still_fresh() {
+        let now = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .expect("current time should be available")
+            .as_secs() as i64;
+        let auth_json = json!({
+            "auth_mode": "chatgpt",
+            "tokens": {
+                "access_token": jwt_with_exp(now + 3600),
+                "id_token": jwt_with_exp(now + 3600),
+                "refresh_token": "refresh-token"
+            }
+        });
+
+        assert!(!auth_tokens_need_refresh(&auth_json));
     }
 }

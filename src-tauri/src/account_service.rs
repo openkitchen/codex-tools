@@ -394,24 +394,23 @@ pub(crate) async fn refresh_all_usage_internal(
             account.updated_at = outcome.updated_at;
             account.auth_json = outcome.auth_json.clone();
             account.email = outcome.auth_email.clone().or(account.email.clone());
-            let trusted_auth_plan_type = if outcome.auth_is_current || outcome.auth_refreshed {
+            let preferred_auth_plan_type = if outcome.auth_is_current || outcome.auth_refreshed {
                 outcome.auth_plan_type.clone()
             } else {
-                None
+                outcome.auth_plan_type.clone().or(account.plan_type.clone())
             };
             if let Some(snapshot) = outcome.usage.clone() {
                 let mut resolved_snapshot = snapshot;
-                let resolved_plan_type = trusted_auth_plan_type
+                let resolved_plan_type = preferred_auth_plan_type
                     .clone()
-                    .or(resolved_snapshot.plan_type.clone())
-                    .or(account.plan_type.clone());
+                    .or(resolved_snapshot.plan_type.clone());
                 resolved_snapshot.plan_type = resolved_plan_type.clone();
                 account.plan_type = resolved_plan_type;
                 account.usage = Some(resolved_snapshot);
                 account.usage_error = None;
             } else if let Some(err) = outcome.usage_error.clone() {
-                if trusted_auth_plan_type.is_some() {
-                    account.plan_type = trusted_auth_plan_type;
+                if preferred_auth_plan_type.is_some() {
+                    account.plan_type = preferred_auth_plan_type;
                 }
                 account.usage_error = Some(err);
             }
@@ -657,10 +656,10 @@ fn upsert_prepared_import(
     let now = now_unix_seconds();
     let resolved_label = normalize_custom_label(label)
         .unwrap_or_else(|| fallback_account_label(email.as_deref(), &account_id));
-    let resolved_plan_type = usage
-        .as_ref()
-        .and_then(|snapshot| snapshot.plan_type.clone())
-        .or(plan_type);
+    let resolved_plan_type = plan_type.or_else(|| {
+        usage.as_ref()
+            .and_then(|snapshot| snapshot.plan_type.clone())
+    });
     let resolved_account_key = account_group_key(&principal_id, &account_id);
     let resolved_plan_key = normalize_plan_type_key(resolved_plan_type.as_deref());
     let resolved_variant_key =
@@ -884,6 +883,33 @@ mod tests {
                 .as_ref()
                 .and_then(|usage| usage.plan_type.as_deref()),
             Some("team")
+        );
+    }
+
+    #[test]
+    fn upsert_prepared_import_prefers_auth_plan_type_over_usage_plan_type() {
+        let mut store = AccountsStore::default();
+        let prepared = PreparedImport {
+            principal_id: "shared@example.com".to_string(),
+            auth_json: json!({ "kind": "team-auth" }),
+            account_id: "account-1".to_string(),
+            email: Some("shared@example.com".to_string()),
+            plan_type: Some("team".to_string()),
+            usage: Some(usage_snapshot("plus")),
+            label: Some("team".to_string()),
+        };
+
+        let (summary, updated_existing) = upsert_prepared_import(&mut store, prepared, None, None);
+
+        assert!(!updated_existing);
+        assert_eq!(summary.plan_type.as_deref(), Some("team"));
+        assert_eq!(store.accounts[0].plan_type.as_deref(), Some("team"));
+        assert_eq!(
+            store.accounts[0]
+                .usage
+                .as_ref()
+                .and_then(|usage| usage.plan_type.as_deref()),
+            Some("plus")
         );
     }
 

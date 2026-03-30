@@ -16,10 +16,10 @@ mod tray;
 mod usage;
 mod utils;
 
-use std::process::Command;
 use std::io::Read;
 use std::io::Write;
 use std::net::TcpListener;
+use std::process::Command;
 use std::thread;
 use std::time::Duration;
 use std::time::SystemTime;
@@ -226,7 +226,12 @@ fn run_oauth_callback_listener(
                 let path = match read_oauth_request_path(&mut stream) {
                     Ok(value) => value,
                     Err(error) => {
-                        write_oauth_html_response(&mut stream, "400 Bad Request", "授权失败", &error);
+                        write_oauth_html_response(
+                            &mut stream,
+                            "400 Bad Request",
+                            "授权失败",
+                            &error,
+                        );
                         break;
                     }
                 };
@@ -251,7 +256,8 @@ fn run_oauth_callback_listener(
                     continue;
                 }
 
-                let callback_url = format!("http://localhost:{}{}", auth::oauth_redirect_port(), path);
+                let callback_url =
+                    format!("http://localhost:{}{}", auth::oauth_redirect_port(), path);
                 let callback_result = tauri::async_runtime::block_on(async {
                     let state = app.state::<AppState>();
                     let pending_matches = {
@@ -264,7 +270,8 @@ fn run_oauth_callback_listener(
                         return Err("当前授权会话已失效，请回到应用重新打开授权页面。".to_string());
                     }
 
-                    let result = complete_oauth_login_internal(&app, state.inner(), &callback_url).await;
+                    let result =
+                        complete_oauth_login_internal(&app, state.inner(), &callback_url).await;
                     clear_pending_oauth_if_matches(state.inner(), &pending.state).await;
                     result
                 });
@@ -344,8 +351,13 @@ async fn start_oauth_callback_listener(
 ) -> Result<(), String> {
     stop_oauth_callback_listener(state).await;
 
-    let listener = TcpListener::bind(("127.0.0.1", auth::oauth_redirect_port()))
-        .map_err(|error| format!("无法启动 OAuth 回调监听 127.0.0.1:{}: {error}", auth::oauth_redirect_port()))?;
+    let listener =
+        TcpListener::bind(("127.0.0.1", auth::oauth_redirect_port())).map_err(|error| {
+            format!(
+                "无法启动 OAuth 回调监听 127.0.0.1:{}: {error}",
+                auth::oauth_redirect_port()
+            )
+        })?;
     listener
         .set_nonblocking(true)
         .map_err(|error| format!("无法设置 OAuth 回调监听模式: {error}"))?;
@@ -624,12 +636,40 @@ async fn switch_account_and_launch(
         store::load_store(&app)?
     };
 
-    let account = store
+    let mut account = store
         .accounts
         .iter()
         .find(|account| account.id == id)
         .cloned()
         .ok_or_else(|| "找不到要切换的账号".to_string())?;
+
+    if auth::auth_tokens_need_refresh(&account.auth_json) {
+        let refreshed_auth = auth::refresh_chatgpt_auth_tokens(&account.auth_json)
+            .await
+            .map_err(|error| {
+                format!(
+                    "切换账号前刷新登录令牌失败: {}",
+                    normalize_switch_refresh_error(&error)
+                )
+            })?;
+
+        account.auth_json = refreshed_auth.clone();
+
+        let refreshed_at = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .map_err(|error| format!("读取系统时间失败: {error}"))?
+            .as_secs() as i64;
+        let _guard = state.store_lock.lock().await;
+        let mut latest_store = store::load_store(&app)?;
+        let stored_account = latest_store
+            .accounts
+            .iter_mut()
+            .find(|stored| stored.id == id)
+            .ok_or_else(|| "找不到要切换的账号".to_string())?;
+        stored_account.auth_json = refreshed_auth;
+        stored_account.updated_at = refreshed_at;
+        store::save_store(&app, &latest_store)?;
+    }
 
     let should_sync_opencode = store.settings.sync_opencode_openai_auth;
     let should_restart_opencode_desktop =
@@ -741,6 +781,23 @@ async fn switch_account_and_launch(
         restarted_editor_apps,
         editor_restart_error,
     })
+}
+
+fn normalize_switch_refresh_error(raw_error: &str) -> String {
+    let normalized = raw_error.to_ascii_lowercase();
+    if normalized.contains("refresh_token_reused")
+        || normalized
+            .contains("your refresh token has already been used to generate a new access token")
+    {
+        return "当前账号的 refresh_token 已失效或已被轮换，请重新登录授权。".to_string();
+    }
+    if normalized.contains("please try signing in again")
+        || normalized.contains("provided authentication token is expired")
+        || normalized.contains("token is expired")
+    {
+        return "当前账号授权已过期，请重新登录授权。".to_string();
+    }
+    raw_error.to_string()
 }
 
 #[tauri::command]

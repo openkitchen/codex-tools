@@ -379,15 +379,14 @@ impl StoredAccount {
     }
 
     pub(crate) fn resolved_plan_type(&self) -> Option<String> {
-        self.usage
-            .as_ref()
-            .and_then(|usage| usage.plan_type.clone())
-            .or(self.plan_type.clone())
+        self.plan_type
+            .clone()
             .or_else(|| {
                 extract_auth(&self.auth_json)
                     .ok()
                     .and_then(|auth| auth.plan_type)
             })
+            .or_else(|| self.usage.as_ref().and_then(|usage| usage.plan_type.clone()))
     }
 
     pub(crate) fn variant_key(&self) -> String {
@@ -517,6 +516,8 @@ fn duplicate_account_merge_score(account: &StoredAccount) -> (u8, u8, u8, i64, i
 
 #[cfg(test)]
 mod tests {
+    use base64::engine::general_purpose::URL_SAFE_NO_PAD;
+    use base64::Engine;
     use super::dedupe_account_variants;
     use super::StoredAccount;
     use super::UsageSnapshot;
@@ -539,6 +540,13 @@ mod tests {
             }),
             credits: None,
         }
+    }
+
+    fn jwt_with_plan(plan_type: &str) -> String {
+        let payload = URL_SAFE_NO_PAD.encode(format!(
+            r#"{{"email":"shared@example.com","https://api.openai.com/auth":{{"chatgpt_account_id":"account-1","chatgpt_plan_type":"{plan_type}"}}}}"#
+        ));
+        format!("header.{payload}.signature")
     }
 
     fn stored_account(
@@ -607,6 +615,51 @@ mod tests {
         assert!(changed);
         assert_eq!(accounts.len(), 1);
         assert_eq!(accounts[0].id, "team");
+    }
+
+    #[test]
+    fn resolved_plan_type_prefers_stored_plan_type_over_usage_plan_type() {
+        let account = StoredAccount {
+            id: "mixed".to_string(),
+            label: "mixed".to_string(),
+            principal_id: Some("shared@example.com".to_string()),
+            email: Some("shared@example.com".to_string()),
+            account_id: "account-1".to_string(),
+            plan_type: Some("team".to_string()),
+            auth_json: json!({ "kind": "mixed" }),
+            added_at: 1,
+            updated_at: 1,
+            usage: Some(usage_snapshot("plus")),
+            usage_error: None,
+        };
+
+        assert_eq!(account.resolved_plan_type().as_deref(), Some("team"));
+        assert_eq!(account.variant_key(), "shared@example.com|account-1|team");
+    }
+
+    #[test]
+    fn resolved_plan_type_falls_back_to_auth_claim_before_usage() {
+        let account = StoredAccount {
+            id: "auth".to_string(),
+            label: "auth".to_string(),
+            principal_id: Some("shared@example.com".to_string()),
+            email: Some("shared@example.com".to_string()),
+            account_id: "account-1".to_string(),
+            plan_type: None,
+            auth_json: json!({
+                "auth_mode": "chatgpt",
+                "tokens": {
+                    "access_token": "token",
+                    "id_token": jwt_with_plan("team")
+                }
+            }),
+            added_at: 1,
+            updated_at: 1,
+            usage: Some(usage_snapshot("plus")),
+            usage_error: None,
+        };
+
+        assert_eq!(account.resolved_plan_type().as_deref(), Some("team"));
     }
 
     #[test]
