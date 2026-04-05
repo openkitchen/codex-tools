@@ -5,6 +5,7 @@ use crate::models::CreditSnapshot;
 use crate::models::UsageSnapshot;
 use crate::models::UsageWindow;
 use crate::utils::now_unix_seconds;
+use crate::utils::resolve_user_codex_path;
 use crate::utils::truncate_for_error;
 
 const DEFAULT_CHATGPT_BASE_URL: &str = "https://chatgpt.com";
@@ -160,8 +161,7 @@ fn format_reqwest_error(err: &reqwest::Error) -> String {
 }
 
 fn read_chatgpt_base_url_from_config() -> Option<String> {
-    let home = dirs::home_dir()?;
-    let config_path = home.join(".codex").join("config.toml");
+    let config_path = resolve_user_codex_path("config.toml").ok()?;
     let contents = std::fs::read_to_string(config_path).ok()?;
 
     for line in contents.lines() {

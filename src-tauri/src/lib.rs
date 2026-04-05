@@ -879,41 +879,15 @@ async fn switch_account_and_launch(
     // 切换时强制结束旧实例，避免触发“是否退出”确认弹窗。
     force_stop_running_codex();
 
-    if let Some(path) = cli::find_configured_codex_app_path(configured_codex_launch_path.as_deref())
-        .or_else(cli::find_codex_app_path)
-    {
-        let mut cmd = Command::new("open");
-        cmd.arg("-na").arg(&path);
-        if let Some(workspace) = workspace_path.as_deref() {
-            cmd.arg(workspace);
-        }
-        let status = cmd
-            .status()
-            .map_err(|e| format!("启动 Codex.app 失败: {e}"))?;
-        if !status.success() {
-            return Err("Codex.app 启动失败".to_string());
-        }
-
-        return Ok(SwitchAccountResult {
-            account_id: account.account_id,
-            launched_app_path: Some(path.to_string_lossy().to_string()),
-            used_fallback_cli: false,
-            opencode_synced,
-            opencode_sync_error,
-            opencode_desktop_restarted,
-            opencode_desktop_restart_error,
-            restarted_editor_apps,
-            editor_restart_error,
-        });
-    }
-
     let mut cmd = cli::new_codex_command(configured_codex_launch_path.as_deref())?;
+    let codex_home = utils::resolve_tools_codex_home_dir()?;
+    cmd.env("CODEX_HOME", &codex_home);
     cmd.arg("app");
     if let Some(workspace) = workspace_path.as_deref() {
         cmd.arg(workspace);
     }
     cmd.spawn()
-        .map_err(|e| format!("未检测到 Codex.app，且通过 codex app 启动失败: {e}"))?;
+        .map_err(|e| format!("通过独立 CODEX_HOME 启动 codex app 失败: {e}"))?;
 
     Ok(SwitchAccountResult {
         account_id: account.account_id,

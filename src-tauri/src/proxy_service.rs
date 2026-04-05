@@ -78,8 +78,7 @@ const MODELS: &[&str] = &[
     "gpt-5.3-codex",
     "gpt-5.3-codex-spark",
 ];
-const REQUEST_MODEL_MAPPINGS: &[(&str, &str)] = &[("gpt-5-4", "gpt-5.4")];
-const CLIENT_MODEL_REJECTIONS: &[(&str, &str)] = &[("gpt5.4", "gpt-5-4"), ("gpt-5.4", "gpt-5-4")];
+const REQUEST_MODEL_MAPPINGS: &[(&str, &str)] = &[("gpt5.4", "gpt-5.4"), ("gpt-5-4", "gpt-5.4")];
 const RESPONSE_MODEL_NORMALIZATIONS: &[(&str, &str)] =
     &[("gpt5.4", "gpt-5.4"), ("gpt-5-4", "gpt-5.4")];
 
@@ -874,9 +873,6 @@ fn normalize_openai_responses_request(mut request: Value) -> Result<(Value, bool
 fn map_client_model_to_upstream(model: &str) -> Result<String, String> {
     if let Some(mapped) = remap_model_name(model, REQUEST_MODEL_MAPPINGS) {
         return Ok(mapped);
-    }
-    if let Some(suggested) = remap_model_name(model, CLIENT_MODEL_REJECTIONS) {
-        return Err(format!("模型 {model} 不支持，请改用 {suggested}"));
     }
 
     Ok(model.to_string())
@@ -2869,7 +2865,7 @@ mod tests {
     }
 
     #[test]
-    fn rejects_chat_request_with_non_alias_gpt_5_4_name() {
+    fn accepts_chat_request_with_canonical_gpt_5_4_name() {
         let request = json!({
             "model": "gpt-5.4",
             "messages": [
@@ -2877,23 +2873,29 @@ mod tests {
             ]
         });
 
-        let error = convert_openai_chat_request_to_codex(&request)
-            .expect_err("request should require gpt-5-4 alias");
+        let (payload, _) =
+            convert_openai_chat_request_to_codex(&request).expect("payload should convert");
 
-        assert!(error.contains("gpt-5-4"));
+        assert_eq!(
+            payload.get("model").and_then(|value| value.as_str()),
+            Some("gpt-5.4")
+        );
     }
 
     #[test]
-    fn rejects_responses_request_with_legacy_gpt5_4_name() {
+    fn accepts_responses_request_with_legacy_gpt5_4_name() {
         let request = json!({
             "model": "gpt5.4",
             "input": "hello"
         });
 
-        let error = normalize_openai_responses_request(request)
-            .expect_err("request should require gpt-5-4 alias");
+        let (payload, _) =
+            normalize_openai_responses_request(request).expect("request should normalize");
 
-        assert!(error.contains("gpt-5-4"));
+        assert_eq!(
+            payload.get("model").and_then(|value| value.as_str()),
+            Some("gpt-5.4")
+        );
     }
 
     #[test]

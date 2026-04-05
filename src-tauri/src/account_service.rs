@@ -20,6 +20,7 @@ use crate::auth::normalize_imported_auth_json;
 use crate::auth::normalize_plan_type_key;
 use crate::auth::read_current_codex_auth;
 use crate::auth::read_current_codex_auth_optional;
+use crate::auth::read_user_codex_auth;
 use crate::auth::refresh_chatgpt_auth_tokens_serialized;
 use crate::models::dedupe_account_variants;
 use crate::models::AccountSummary;
@@ -80,7 +81,7 @@ pub(crate) async fn import_current_auth_account_internal(
     state: &AppState,
     label: Option<String>,
 ) -> Result<AccountSummary, String> {
-    let auth_json = read_current_codex_auth()?;
+    let auth_json = read_user_codex_auth()?;
     let prepared = prepare_auth_json_import(auth_json, label).await?;
     commit_prepared_import(app, state, prepared).await
 }

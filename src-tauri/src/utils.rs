@@ -14,6 +14,31 @@ pub(crate) fn now_unix_seconds() -> i64 {
         .unwrap_or_default()
 }
 
+pub(crate) fn resolve_user_codex_home_dir() -> Result<PathBuf, String> {
+    if let Some(path) = env::var_os("CODEX_HOME")
+        .filter(|value| !value.is_empty())
+        .map(PathBuf::from)
+    {
+        return Ok(path);
+    }
+
+    let home = dirs::home_dir().ok_or_else(|| "无法读取 HOME 目录".to_string())?;
+    Ok(home.join(".codex"))
+}
+
+pub(crate) fn resolve_user_codex_path(file_name: &str) -> Result<PathBuf, String> {
+    Ok(resolve_user_codex_home_dir()?.join(file_name))
+}
+
+pub(crate) fn resolve_tools_codex_home_dir() -> Result<PathBuf, String> {
+    let home = dirs::home_dir().ok_or_else(|| "无法读取 HOME 目录".to_string())?;
+    Ok(home.join(".codex-tools"))
+}
+
+pub(crate) fn resolve_tools_codex_path(file_name: &str) -> Result<PathBuf, String> {
+    Ok(resolve_tools_codex_home_dir()?.join(file_name))
+}
+
 pub(crate) fn short_account(account_id: &str) -> String {
     account_id.chars().take(8).collect()
 }
