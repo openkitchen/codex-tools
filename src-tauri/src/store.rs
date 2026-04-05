@@ -14,6 +14,7 @@ use crate::auth::account_variant_key;
 use crate::auth::current_auth_account_key;
 use crate::auth::extract_auth;
 use crate::auth::read_current_codex_auth_optional;
+use crate::auth::read_user_codex_auth_optional;
 use crate::auth::write_active_codex_auth;
 use crate::models::dedupe_account_variants;
 use crate::models::AccountsStore;
@@ -120,7 +121,7 @@ pub(crate) fn save_store_to_path(path: &Path, store: &AccountsStore) -> Result<(
 }
 
 pub(crate) fn sync_current_auth_account_on_startup_in_path(path: &Path) -> Result<(), String> {
-    let auth_json = match read_current_codex_auth_optional()? {
+    let auth_json = match read_user_codex_auth_optional()? {
         Some(value) => value,
         None => return Ok(()),
     };

@@ -18,6 +18,8 @@ use tokio::sync::Mutex;
 
 use crate::models::ExtractedAuth;
 use crate::models::PreparedOauthLogin;
+use crate::utils::resolve_tools_codex_path;
+use crate::utils::resolve_user_codex_path;
 use crate::utils::set_private_permissions;
 use crate::utils::truncate_for_error;
 
@@ -55,14 +57,14 @@ fn oauth_redirect_uri(port: u16) -> String {
 }
 
 pub(crate) fn read_current_codex_auth() -> Result<Value, String> {
-    let path = codex_auth_path()?;
+    let path = current_codex_auth_path()?;
     let raw = fs::read_to_string(&path)
         .map_err(|e| format!("读取当前 Codex 认证文件失败 {}: {e}", path.display()))?;
     serde_json::from_str(&raw).map_err(|e| format!("当前 Codex 认证文件不是合法 JSON: {e}"))
 }
 
 pub(crate) fn read_current_codex_auth_optional() -> Result<Option<Value>, String> {
-    let path = codex_auth_path()?;
+    let path = current_codex_auth_path()?;
     if !path.exists() {
         return Ok(None);
     }
@@ -74,8 +76,28 @@ pub(crate) fn read_current_codex_auth_optional() -> Result<Option<Value>, String
     Ok(Some(value))
 }
 
+pub(crate) fn read_user_codex_auth() -> Result<Value, String> {
+    let path = user_codex_auth_path()?;
+    let raw = fs::read_to_string(&path)
+        .map_err(|e| format!("读取当前设备 Codex 认证文件失败 {}: {e}", path.display()))?;
+    serde_json::from_str(&raw).map_err(|e| format!("当前设备 Codex 认证文件不是合法 JSON: {e}"))
+}
+
+pub(crate) fn read_user_codex_auth_optional() -> Result<Option<Value>, String> {
+    let path = user_codex_auth_path()?;
+    if !path.exists() {
+        return Ok(None);
+    }
+
+    let raw = fs::read_to_string(&path)
+        .map_err(|e| format!("读取当前设备 Codex 认证文件失败 {}: {e}", path.display()))?;
+    let value =
+        serde_json::from_str(&raw).map_err(|e| format!("当前设备 Codex 认证文件不是合法 JSON: {e}"))?;
+    Ok(Some(value))
+}
+
 pub(crate) fn write_active_codex_auth(auth_json: &Value) -> Result<(), String> {
-    let path = codex_auth_path()?;
+    let path = tools_codex_auth_path()?;
     let parent = path
         .parent()
         .ok_or_else(|| format!("无法解析 auth 目录 {}", path.display()))?;
@@ -599,9 +621,21 @@ fn build_auth_json_from_oauth_tokens(token_response: OAuthTokenResponse) -> Resu
     }))
 }
 
-fn codex_auth_path() -> Result<PathBuf, String> {
-    let home = dirs::home_dir().ok_or_else(|| "无法读取 HOME 目录".to_string())?;
-    Ok(home.join(".codex").join("auth.json"))
+fn current_codex_auth_path() -> Result<PathBuf, String> {
+    let tools_path = tools_codex_auth_path()?;
+    if tools_path.exists() {
+        return Ok(tools_path);
+    }
+
+    user_codex_auth_path()
+}
+
+fn tools_codex_auth_path() -> Result<PathBuf, String> {
+    resolve_tools_codex_path("auth.json")
+}
+
+fn user_codex_auth_path() -> Result<PathBuf, String> {
+    resolve_user_codex_path("auth.json")
 }
 
 fn auth_token_object(auth_json: &Value) -> Option<&Map<String, Value>> {
