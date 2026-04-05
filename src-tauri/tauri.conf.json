@@ -43,7 +43,7 @@
       "dialog": false,
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDU5OUU0REUyQjY0MzY0MEYKUldRUFpFTzI0azJlV1NzMTZVYUlSYWQ0dFFUc0JPV3hCczNxZGREdmZBTHQ1K1RJdW05Z3dNWXQK",
       "endpoints": [
-        "https://github.com/170-carry/codex-tools/releases/latest/download/latest.json"
+        "https://github.com/openkitchen/codex-tools/releases/latest/download/latest.json"
       ]
     }
   }

@@ -6,7 +6,7 @@
 - 本地 `/v1` 反代
 - cloudflared 公网访问
 
-仓库地址：<https://github.com/170-carry/codex-tools>
+仓库地址：<https://github.com/openkitchen/codex-tools>
 
 ## 更新日志
 [更新日志](changelog.md)
@@ -110,8 +110,8 @@ git push origin v0.1.3
 ```
 
 查看：
-- 代码仓库: <https://github.com/170-carry/codex-tools>
-- 版本发布: <https://github.com/170-carry/codex-tools/releases>
+- 代码仓库: <https://github.com/openkitchen/codex-tools>
+- 版本发布: <https://github.com/openkitchen/codex-tools/releases>
 
 ## 目录说明
 
@@ -121,11 +121,11 @@ git push origin v0.1.3
 
 ## Star History
 
-<a href="https://www.star-history.com/?repos=170-carry/codex-tools&type=date&legend=top-left">
+<a href="https://www.star-history.com/?repos=openkitchen/codex-tools&type=date&legend=top-left">
  <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/image?repos=170-carry/codex-tools&type=date&theme=dark&legend=top-left" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/image?repos=170-carry/codex-tools&type=date&legend=top-left" />
-   <img alt="Star History Chart" src="https://api.star-history.com/image?repos=170-carry/codex-tools&type=date&legend=top-left" />
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/image?repos=openkitchen/codex-tools&type=date&theme=dark&legend=top-left" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/image?repos=openkitchen/codex-tools&type=date&legend=top-left" />
+   <img alt="Star History Chart" src="https://api.star-history.com/image?repos=openkitchen/codex-tools&type=date&legend=top-left" />
  </picture>
 </a>
 

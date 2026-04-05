@@ -3,13 +3,13 @@
   "private": true,
   "version": "1.6.1",
   "license": "MIT",
-  "homepage": "https://github.com/170-carry/codex-tools",
+  "homepage": "https://github.com/openkitchen/codex-tools",
   "bugs": {
-    "url": "https://github.com/170-carry/codex-tools/issues"
+    "url": "https://github.com/openkitchen/codex-tools/issues"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/170-carry/codex-tools.git"
+    "url": "https://github.com/openkitchen/codex-tools.git"
   },
   "type": "module",
   "scripts": {
